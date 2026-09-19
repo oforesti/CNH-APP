@@ -9,9 +9,14 @@
 <meta name="apple-mobile-web-app-title" content="CDT">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="CDT">
+<meta name="description" content="Carteira Digital de Trânsito — consulte sua CNH.">
+
+<!-- ═══ PWA ═══ -->
+<link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
 <link rel="shortcut icon" href="/favicon.png">
+
 <title>Carteira Digital de Trânsito</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -144,7 +149,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
 
-  /* ═══ MENU CDT (imagens dos botões) ═══ */
+  /* ═══ MENU CDT (botões como imagens) ═══ */
   #tela-menu .conteudo-menu { padding: 12px; flex: 1; overflow-y: auto; }
 
   .card-menu-img {
@@ -157,7 +162,7 @@
     background-position: center;
     background-repeat: no-repeat;
     cursor: pointer;
-    transition: transform .15s, box-shadow .15s;
+    transition: transform .15s;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     position: relative;
     overflow: hidden;
@@ -168,7 +173,24 @@
     text-align: left;
   }
   .card-menu-img:active { transform: scale(0.98); }
-  /* Texto invisível para acessibilidade (o texto real está na imagem) */
+
+  /* Cor de segurança (fallback) caso a imagem não carregue */
+  .card-menu-img.botao1 { background-color: #168821; }
+  .card-menu-img.botao2 { background-color: #FFCD07; }
+  .card-menu-img.botao3 { background-color: #1351B4; }
+  .card-menu-img.botao4 { background-color: #5992ED; }
+
+  .card-menu-img .fallback-texto {
+    display: none;
+    padding: 20px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 20px;
+    text-transform: uppercase;
+  }
+  .card-menu-img.botao2 .fallback-texto { color: #1a1a1a; }
+  .card-menu-img.sem-imagem .fallback-texto { display: block; }
+
   .card-menu-img .sr-only {
     position: absolute;
     width: 1px; height: 1px;
@@ -485,20 +507,20 @@
       <button class="sair" onclick="sairApp()">Sair</button>
     </div>
     <div class="conteudo-menu">
-      <!-- Botões como IMAGENS de fundo -->
-      <button class="card-menu-img" onclick="abrirCondutor()" style="background-image:url('botao1.jpg');" aria-label="Condutor - Gerencie sua habilitação">
+      <button class="card-menu-img botao1" onclick="abrirCondutor()" style="background-image:url('botao1.jpg');" aria-label="Condutor - Gerencie sua habilitação">
+        <span class="fallback-texto">CONDUTOR</span>
         <span class="sr-only">Condutor - Gerencie sua habilitação</span>
       </button>
-
-      <button class="card-menu-img" onclick="abrirOutras('Veículos')" style="background-image:url('botao2.jpg');" aria-label="Veículos - Acesso ao CRLV digital, venda digital">
+      <button class="card-menu-img botao2" onclick="abrirOutras('Veículos')" style="background-image:url('botao2.jpg');" aria-label="Veículos - Acesso ao CRLV digital, venda digital">
+        <span class="fallback-texto">VEÍCULOS</span>
         <span class="sr-only">Veículos - Acesso ao CRLV digital, venda digital</span>
       </button>
-
-      <button class="card-menu-img" onclick="abrirOutras('Infrações')" style="background-image:url('botao3.jpg');" aria-label="Infrações - Visualize e pague infrações com até 40% de desconto">
+      <button class="card-menu-img botao3" onclick="abrirOutras('Infrações')" style="background-image:url('botao3.jpg');" aria-label="Infrações - Visualize e pague infrações com até 40% de desconto">
+        <span class="fallback-texto">INFRAÇÕES</span>
         <span class="sr-only">Infrações - Visualize e pague infrações com até 40% de desconto</span>
       </button>
-
-      <button class="card-menu-img" onclick="abrirOutras('Educação')" style="background-image:url('botao4.jpg');" aria-label="Educação - Conheça nossas campanhas e projetos">
+      <button class="card-menu-img botao4" onclick="abrirOutras('Educação')" style="background-image:url('botao4.jpg');" aria-label="Educação - Conheça nossas campanhas e projetos">
+        <span class="fallback-texto">EDUCAÇÃO</span>
         <span class="sr-only">Educação - Conheça nossas campanhas e projetos</span>
       </button>
     </div>
@@ -943,6 +965,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("cpf-input").addEventListener("keydown", e => { if (e.key === "Enter") irParaSenha(); });
   document.getElementById("senha-input").addEventListener("keydown", e => { if (e.key === "Enter") fazerLogin(); });
   document.getElementById("chave-input").addEventListener("keydown", e => { if (e.key === "Enter") validarChave(); });
+
+  // ═══ PWA: registrar service worker ═══
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/service-worker.js")
+        .then((reg) => console.log("Service Worker registrado:", reg.scope))
+        .catch((err) => console.log("Falha ao registrar:", err));
+    });
+  }
 });
 
 function exportarCNH() {
