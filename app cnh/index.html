@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1B3A5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CDT">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="CDT">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.png">
+<title>Carteira Digital de Trânsito</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #000;
+  }
+
+  #app {
+    width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
+    margin: 0 auto; background: #F2F2F2; position: relative;
+    overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 0 40px rgba(0,0,0,0.3);
+  }
+  @media (min-width: 431px) {
+    body { display: flex; align-items: center; justify-content: center; background: #111; }
+    #app { border-radius: 24px; }
+  }
+
+  .tela { display: none; flex-direction: column; height: 100%; }
+  .tela.ativa { display: flex; }
+
+  /* ═══ TOPO ═══ */
+  .topo-gov {
+    background: #1B3A5C; color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 15px; font-weight: 600; min-height: 56px; flex-shrink: 0;
+  }
+  .topo-gov .seta { cursor: pointer; display: flex; align-items: center; }
+  .topo-gov .titulo-topo { letter-spacing: .5px; flex: 1; }
+
+  .topo-cdt {
+    background: #1B3A5C; color: #fff; padding: 16px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    min-height: 56px; flex-shrink: 0;
+  }
+  .topo-cdt .titulo-cdt { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .topo-cdt .sair {
+    background: transparent; border: 1px solid #fff; color: #fff;
+    padding: 6px 12px; border-radius: 6px; font-size: 12px;
+    cursor: pointer; font-weight: 600;
+  }
+
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  .erro {
+    margin-top: 14px; padding: 10px 14px; background: #fdecec;
+    border: 1px solid #f3b8b8; color: #a02020; font-size: 13px;
+    border-radius: 4px; display: none;
+  }
+  .erro.show { display: block; }
+
+  /* ═══ CPF ═══ */
+  #tela-cpf .area-logo { background: #fff; padding: 20px 24px; border-bottom: 1px solid #e5e5e5; }
+  #tela-cpf .area-logo svg { height: 36px; }
+  #tela-cpf .bloco {
+    background: #fff; margin: 16px 12px; border-radius: 4px;
+    padding: 24px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  #tela-cpf h2 { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; }
+  #tela-cpf .icone-cpf {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; color: #1a1a1a; font-weight: 500; margin-bottom: 12px;
+  }
+  #tela-cpf .descricao { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 24px; }
+  #tela-cpf label { display: block; font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; }
+  #tela-cpf input {
+    width: 100%; height: 48px; border: 1px solid #888; border-radius: 4px;
+    padding: 0 14px; font-size: 15px; outline: none; background: #fff; color: #1a1a1a;
+  }
+  #tela-cpf input:focus { border-color: #1351B4; box-shadow: 0 0 0 2px rgba(19,81,180,0.15); }
+  #tela-cpf input::placeholder { color: #999; font-style: italic; }
+  #tela-cpf .btn-continuar {
+    width: 100%; height: 48px; border: none; border-radius: 24px;
+    background: #1351B4; color: #fff; font-size: 16px; font-weight: 600;
+    cursor: pointer; margin-top: 24px;
+    touch-action: manipulation;
+    -webkit-user-select: none; user-select: none;
+  }
+  #tela-cpf .btn-continuar:active { background: #0F418F; }
+
+  #tela-cpf .outras-opcoes {
+    background: #fff; margin: 16px 12px; border-radius: 4px;
+    padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  #tela-cpf .outras-opcoes h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+  .opcao {
+    display: flex; align-items: center; gap: 12px; padding: 14px 0;
+    font-size: 14px; color: #1a1a1a; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+  }
+  .opcao:last-child { border-bottom: none; }
+  .opcao .tag {
+    background: #168821; color: #fff; font-size: 10px; font-weight: 700;
+    padding: 3px 6px; border-radius: 3px; margin-left: auto;
+  }
+  #tela-cpf .link-final {
+    text-align: center; padding: 24px; font-size: 14px;
+    color: #1351B4; font-weight: 600; cursor: pointer;
+  }
+
+  /* ═══ SENHA ═══ */
+  #tela-senha .bloco {
+    background: #fff; margin: 16px 12px; border-radius: 4px;
+    padding: 24px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  #tela-senha h2 { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: #1a1a1a; }
+  #tela-senha label { display: block; font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; }
+  #tela-senha .cpf-display { font-size: 15px; color: #1a1a1a; margin-bottom: 16px; font-weight: 500; }
+  #tela-senha input[type=password] {
+    width: 100%; height: 48px; border: 1px solid #888; border-radius: 4px;
+    padding: 0 14px; font-size: 15px; outline: none; background: #fff;
+  }
+  #tela-senha input[type=password]:focus { border-color: #1351B4; box-shadow: 0 0 0 2px rgba(19,81,180,0.15); }
+  #tela-senha .link-esqueci {
+    display: block; font-size: 14px; color: #1351B4;
+    text-decoration: underline; margin: 12px 0 24px; cursor: pointer;
+  }
+  #tela-senha .botoes { display: flex; gap: 12px; }
+  #tela-senha button {
+    flex: 1; height: 48px; border-radius: 24px; font-size: 16px;
+    font-weight: 600; cursor: pointer; touch-action: manipulation;
+  }
+  #tela-senha .cancelar { background: #fff; border: 2px solid #1351B4; color: #1351B4; }
+  #tela-senha .entrar { background: #1351B4; border: none; color: #fff; }
+  #tela-senha .entrar:active { background: #0F418F; }
+  #tela-senha .link-duvidas {
+    background: #fff; text-align: center; padding: 18px; margin: 16px 12px;
+    border-radius: 4px; font-size: 14px; color: #1351B4; font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* ═══ MENU CDT (imagens dos botões) ═══ */
+  #tela-menu .conteudo-menu { padding: 12px; flex: 1; overflow-y: auto; }
+
+  .card-menu-img {
+    display: block;
+    width: 100%;
+    height: 100px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    position: relative;
+    overflow: hidden;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+  }
+  .card-menu-img:active { transform: scale(0.98); }
+  /* Texto invisível para acessibilidade (o texto real está na imagem) */
+  .card-menu-img .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ═══ CONDUTOR ═══ */
+  #tela-condutor .conteudo { padding: 16px; flex: 1; overflow-y: auto; background: #F2F2F2; }
+  .condutor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .condutor-header h2 { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+  .selo-bom {
+    background: #FFCD07; border-radius: 50%; width: 60px; height: 60px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #1a1a1a; font-size: 8px; font-weight: 700; text-align: center;
+    border: 2px solid #E6B800;
+  }
+  .selo-bom .bom-grande { font-size: 14px; font-weight: 900; line-height: 1; }
+  .selo-bom .linha { font-size: 6px; }
+  .condutor-nome { margin-bottom: 18px; }
+  .condutor-nome strong { display: block; color: #666; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .condutor-nome span { font-weight: 500; color: #1a1a1a; font-size: 15px; }
+  .condutor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; margin-bottom: 20px; }
+  .condutor-grid .item strong { display: block; color: #666; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .condutor-grid .item span { font-weight: 500; color: #1a1a1a; font-size: 15px; }
+
+  .acoes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .acao-btn {
+    background: #fff; border-radius: 8px; padding: 20px 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: transform .15s; text-align: center;
+  }
+  .acao-btn:active { transform: scale(0.97); }
+  .acao-btn svg { width: 40px; height: 40px; }
+  .acao-btn span {
+    font-size: 12px; font-weight: 600; color: #1a1a1a;
+    text-transform: uppercase; letter-spacing: .5px; line-height: 1.3;
+  }
+  .acao-btn.ultimo { grid-column: 1 / 2; }
+
+  /* ═══ CHAVE DE ACESSO ═══ */
+  #tela-chave .conteudo { padding: 16px; flex: 1; overflow-y: auto; background: #F2F2F2; }
+  #tela-chave .bloco {
+    background: #fff; border-radius: 4px; padding: 24px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  #tela-chave h2 {
+    font-size: 16px; font-weight: 700; margin-bottom: 20px; color: #1a1a1a;
+    padding-bottom: 16px; border-bottom: 1px solid #e5e5e5;
+  }
+  #tela-chave label { display: block; font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+  #tela-chave .input-wrap { position: relative; }
+  #tela-chave input {
+    width: 100%; height: 48px; border: 1px solid #d9d9d9; border-radius: 4px;
+    padding: 0 48px 0 14px; font-size: 15px; outline: none; background: #fff;
+  }
+  #tela-chave input:focus { border-color: #1351B4; box-shadow: 0 0 0 2px rgba(19,81,180,0.15); }
+  #tela-chave .olho {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; display: flex; align-items: center;
+  }
+  #tela-chave .btn-entrar {
+    width: 100%; height: 48px; border-radius: 24px; border: none;
+    background: #1351B4; color: #fff; font-size: 16px; font-weight: 600;
+    cursor: pointer; margin-top: 24px; touch-action: manipulation;
+  }
+  #tela-chave .btn-entrar:active { background: #0F418F; }
+  #tela-chave .link-esqueci {
+    display: block; text-align: center; font-size: 15px; color: #1351B4;
+    font-weight: 700; text-decoration: underline; margin-top: 20px; cursor: pointer;
+  }
+
+  /* ═══ VISUALIZAR CNH ═══ */
+  #tela-cnh { background: #F2F2F2; }
+
+  #tela-cnh .topo-cnh {
+    background: #1B3A5C; color: #fff; padding: 14px 16px; flex-shrink: 0;
+    position: relative;
+  }
+  #tela-cnh .topo-cnh .linha1 {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
+  }
+  #tela-cnh .topo-cnh h1 { font-size: 24px; font-weight: 700; letter-spacing: .5px; flex: 1; }
+  #tela-cnh .topo-cnh .atualizacao {
+    font-size: 13px; opacity: 0.9; padding-left: 34px;
+  }
+
+  .btn-opcoes-topo {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .btn-opcoes-topo svg { width: 22px; height: 22px; display: block; }
+  .btn-opcoes-topo:active { opacity: 0.7; }
+
+  #tela-cnh .aviso {
+    padding: 16px;
+    font-size: 13px;
+    color: #666;
+    text-align: center;
+    background: #F2F2F2;
+  }
+
+  #tela-cnh .carrossel-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #F2F2F2;
+    overflow: hidden;
+    position: relative;
+  }
+  #tela-cnh .carrossel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    height: 100%;
+  }
+  #tela-cnh .carrossel::-webkit-scrollbar { display: none; }
+  #tela-cnh .slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  #tela-cnh .slide .card-doc {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 0;
+    min-height: 260px;
+  }
+  #tela-cnh .slide .card-doc img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  #tela-cnh .slide .placeholder-slide {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px; color: #bbb; cursor: pointer; padding: 40px 20px;
+  }
+  #tela-cnh .slide .placeholder-slide svg {
+    width: 64px; height: 64px;
+    stroke: #c8c8c8; fill: none;
+  }
+  #tela-cnh .slide .placeholder-slide span {
+    font-size: 12px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: #c8c8c8; text-align: center;
+  }
+
+  .menu-flutuante {
+    position: absolute;
+    top: 52px;
+    right: 12px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    min-width: 170px;
+    padding: 6px 0;
+    z-index: 100;
+    display: none;
+  }
+  .menu-flutuante.ativo { display: block; }
+  .menu-flutuante button {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    cursor: pointer;
+  }
+  .menu-flutuante button:active { background: #f0f0f0; }
+  .menu-flutuante button.vermelho { color: #C8202B; }
+  .menu-flutuante .divisor { height: 1px; background: #e5e5e5; margin: 4px 0; }
+
+  #tela-cnh .indicadores {
+    display: flex; justify-content: center; gap: 8px;
+    padding: 14px 0 18px; background: #F2F2F2;
+  }
+  #tela-cnh .indicadores .bolinha {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #ccc; cursor: pointer; transition: background .2s;
+  }
+  #tela-cnh .indicadores .bolinha.ativa { background: #1B3A5C; }
+
+  #tela-cnh .rodape-cnh { background: #F2F2F2; flex-shrink: 0; }
+  #tela-cnh .rodape-item {
+    background: #fff;
+    padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  #tela-cnh .rodape-item:last-child { border-bottom: none; }
+  #tela-cnh .rodape-item svg { flex-shrink: 0; }
+  #tela-cnh .rodape-item span { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  #tela-cnh .rodape-item.exportar span { text-decoration: underline; }
+
+  /* ═══ OUTRAS ═══ */
+  .outras-conteudo { padding: 40px 24px; flex: 1; text-align: center; color: #888; }
+  .outras-conteudo h2 { color: #1a1a1a; margin-bottom: 8px; font-size: 18px; }
+  .outras-conteudo p { font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ CPF ═══ -->
+  <div id="tela-cpf" class="tela ativa">
+    <div class="topo-gov">
+      <span class="seta">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="titulo-topo">ENTRAR COM GOV.BR</span>
+    </div>
+    <div class="scroll">
+      <div class="area-logo">
+        <svg viewBox="0 0 130 34" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="26" font-family="Arial, sans-serif" font-weight="900" font-size="28" fill="#1351B4">gov</text>
+          <text x="56" y="26" font-family="Arial, sans-serif" font-weight="900" font-size="28" fill="#FFCD07">.br</text>
+        </svg>
+      </div>
+      <div class="bloco">
+        <h2>Identifique-se no gov.br com:</h2>
+        <div class="icone-cpf">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1351B4"><rect x="2" y="5" width="20" height="14" rx="2"/><rect x="5" y="9" width="7" height="2" fill="#fff"/><rect x="5" y="13" width="10" height="2" fill="#fff"/><circle cx="17" cy="11" r="2" fill="#fff"/></svg>
+          <span>Número do CPF</span>
+        </div>
+        <p class="descricao">Digite seu CPF para <strong>criar ou acessar</strong> sua conta gov.br</p>
+        <label for="cpf-input">CPF</label>
+        <input id="cpf-input" type="tel" placeholder="Digite seu CPF" maxlength="14" inputmode="numeric" autocomplete="off">
+        <button type="button" class="btn-continuar" id="btn-continuar">Continuar</button>
+        <div class="erro" id="cpf-erro"></div>
+      </div>
+      <div class="outras-opcoes">
+        <h3>Outras opções de identificação:</h3>
+        <div class="opcao">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#168821"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
+          <span>Login com seu banco</span>
+          <span class="tag">SUA CONTA SERÁ PRATA</span>
+        </div>
+        <div class="opcao">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1351B4"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
+          <span>Login com QR code</span>
+        </div>
+        <div class="opcao">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1351B4"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          <span>Seu certificado digital</span>
+        </div>
+        <div class="opcao">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1351B4"><path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+          <span>Seu certificado digital em nuvem</span>
+        </div>
+      </div>
+      <div class="link-final">Entenda a conta gov.br</div>
+    </div>
+  </div>
+
+  <!-- ═══ SENHA ═══ -->
+  <div id="tela-senha" class="tela">
+    <div class="topo-gov">
+      <span class="seta" onclick="voltarCPF()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="titulo-topo">ENTRAR COM GOV.BR</span>
+    </div>
+    <div class="scroll">
+      <div class="bloco">
+        <h2>Digite sua senha</h2>
+        <div class="cpf-display" id="cpf-mostrar"></div>
+        <label for="senha-input">Senha</label>
+        <input id="senha-input" type="password" placeholder="Digite sua senha atual" autocomplete="current-password">
+        <label class="link-esqueci" onclick="alert('Recuperação de senha indisponível.')">Esqueci minha senha</label>
+        <div class="botoes">
+          <button class="cancelar" onclick="voltarCPF()">Cancelar</button>
+          <button class="entrar" id="btn-entrar-login">Entrar</button>
+        </div>
+        <div class="erro" id="senha-erro"></div>
+      </div>
+      <div class="link-duvidas" onclick="alert('Em caso de dúvidas, acesse gov.br')">Ficou com dúvidas?</div>
+    </div>
+  </div>
+
+  <!-- ═══ MENU ═══ -->
+  <div id="tela-menu" class="tela">
+    <div class="topo-cdt">
+      <div class="titulo-cdt">CDT</div>
+      <button class="sair" onclick="sairApp()">Sair</button>
+    </div>
+    <div class="conteudo-menu">
+      <!-- Botões como IMAGENS de fundo -->
+      <button class="card-menu-img" onclick="abrirCondutor()" style="background-image:url('botao1.jpg');" aria-label="Condutor - Gerencie sua habilitação">
+        <span class="sr-only">Condutor - Gerencie sua habilitação</span>
+      </button>
+
+      <button class="card-menu-img" onclick="abrirOutras('Veículos')" style="background-image:url('botao2.jpg');" aria-label="Veículos - Acesso ao CRLV digital, venda digital">
+        <span class="sr-only">Veículos - Acesso ao CRLV digital, venda digital</span>
+      </button>
+
+      <button class="card-menu-img" onclick="abrirOutras('Infrações')" style="background-image:url('botao3.jpg');" aria-label="Infrações - Visualize e pague infrações com até 40% de desconto">
+        <span class="sr-only">Infrações - Visualize e pague infrações com até 40% de desconto</span>
+      </button>
+
+      <button class="card-menu-img" onclick="abrirOutras('Educação')" style="background-image:url('botao4.jpg');" aria-label="Educação - Conheça nossas campanhas e projetos">
+        <span class="sr-only">Educação - Conheça nossas campanhas e projetos</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ CONDUTOR ═══ -->
+  <div id="tela-condutor" class="tela">
+    <div class="topo-gov">
+      <span class="seta" onclick="voltarMenu()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="titulo-topo">CONDUTOR</span>
+    </div>
+    <div class="conteudo">
+      <div class="condutor-header">
+        <h2>Informações do Condutor</h2>
+        <div class="selo-bom">
+          <span class="linha">SELO</span>
+          <span class="bom-grande">BOM</span>
+          <span class="linha">CONDUTOR</span>
+        </div>
+      </div>
+      <div class="condutor-nome">
+        <strong>Nome</strong>
+        <span id="cond-nome">—</span>
+      </div>
+      <div class="condutor-grid">
+        <div class="item"><strong>CPF</strong><span id="cond-cpf">—</span></div>
+        <div class="item"><strong>Sexo</strong><span>Masculino</span></div>
+        <div class="item"><strong>Categoria</strong><span>B</span></div>
+        <div class="item"><strong>UF de Emissão</strong><span>1</span></div>
+        <div class="item"><strong>Data de Validade</strong><span>18/10/2035</span></div>
+        <div class="item"><strong>Data de Emissão</strong><span>20/09/2035</span></div>
+      </div>
+      <div class="acoes-grid">
+        <div class="acao-btn" onclick="abrirChaveAcesso()">
+          <svg viewBox="0 0 24 24" fill="#1B3A5C"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="9" cy="9" r="2" fill="#fff"/><rect x="13" y="8" width="4" height="1" fill="#fff"/><rect x="13" y="10" width="4" height="1" fill="#fff"/><rect x="7" y="14" width="10" height="1.5" fill="#fff"/><rect x="7" y="17" width="10" height="1.5" fill="#fff"/></svg>
+          <span>Acessar CNH</span>
+        </div>
+        <div class="acao-btn" onclick="abrirOutras('Cadastro Positivo')">
+          <svg viewBox="0 0 24 24" fill="#1B3A5C"><circle cx="12" cy="7" r="4"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7" fill="#1B3A5C"/><circle cx="17" cy="17" r="3" fill="#1B3A5C"/><path d="M15 17h4M17 15v4" stroke="#fff" stroke-width="1.5"/></svg>
+          <span>Acessar Cadastro Positivo</span>
+        </div>
+        <div class="acao-btn" onclick="abrirOutras('Cursos Especializados')">
+          <svg viewBox="0 0 24 24" fill="#1B3A5C"><rect x="3" y="4" width="18" height="14" rx="2"/><polygon points="10,8 10,14 15,11" fill="#fff"/><rect x="6" y="19" width="12" height="2" fill="#1B3A5C"/></svg>
+          <span>Cursos Especializados</span>
+        </div>
+        <div class="acao-btn" onclick="abrirOutras('Exames Toxicológicos')">
+          <svg viewBox="0 0 24 24" fill="#1B3A5C"><path d="M9 3h6v2H9zM8 5v6L4 20a1 1 0 001 1h14a1 1 0 001-1l-4-9V5H8z"/><circle cx="12" cy="15" r="2" fill="#fff"/></svg>
+          <span>Exames Toxicológicos</span>
+        </div>
+        <div class="acao-btn ultimo" onclick="abrirOutras('Credencial de Estacionamento')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1B3A5C" stroke-width="2"><circle cx="12" cy="12" r="10"/><text x="12" y="17" text-anchor="middle" font-size="14" font-weight="900" fill="#1B3A5C" font-family="Arial">E</text></svg>
+          <span>Credencial de Estacionamento</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CHAVE DE ACESSO ═══ -->
+  <div id="tela-chave" class="tela">
+    <div class="topo-gov">
+      <span class="seta" onclick="voltarCondutor()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="titulo-topo">INSERIR CHAVE DE ACESSO</span>
+    </div>
+    <div class="conteudo">
+      <div class="bloco">
+        <h2>Digite a sua chave de acesso</h2>
+        <label for="chave-input">Chave de acesso</label>
+        <div class="input-wrap">
+          <input id="chave-input" type="password" placeholder="" autocomplete="off">
+          <span class="olho" onclick="toggleChave()">
+            <svg id="icone-olho" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line x1="3" y1="3" x2="21" y2="21" stroke="#1a1a1a" stroke-width="2"/>
+            </svg>
+          </span>
+        </div>
+        <button class="btn-entrar" id="btn-validar-chave">Entrar</button>
+        <label class="link-esqueci" onclick="alert('Procure o órgão emissor para recuperar sua chave.')">Esqueci a chave de acesso?</label>
+        <div class="erro" id="chave-erro"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VISUALIZAR CNH ═══ -->
+  <div id="tela-cnh" class="tela">
+    <div class="topo-cnh">
+      <div class="linha1">
+        <span class="seta" onclick="voltarChave()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </span>
+        <h1>HABILITAÇÃO</h1>
+        <button class="btn-opcoes-topo" id="btn-opcoes-topo" aria-label="Opções">
+          <svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        </button>
+      </div>
+      <div class="atualizacao">Última atualização em: <span id="data-atualizacao">—</span></div>
+
+      <div class="menu-flutuante" id="menu-flutuante-topo">
+        <button onclick="trocarImagemAtual()">Trocar imagem</button>
+        <div class="divisor"></div>
+        <button class="vermelho" onclick="removerImagemAtual()">Remover</button>
+      </div>
+    </div>
+
+    <div class="aviso">Verifique a autenticidade do QR code com o app Vio</div>
+
+    <div class="carrossel-wrap">
+      <div class="carrossel" id="carrossel"></div>
+    </div>
+
+    <div class="indicadores" id="indicadores">
+      <div class="bolinha ativa" onclick="irParaSlide(0)"></div>
+      <div class="bolinha" onclick="irParaSlide(1)"></div>
+      <div class="bolinha" onclick="irParaSlide(2)"></div>
+      <div class="bolinha" onclick="irParaSlide(3)"></div>
+    </div>
+
+    <div class="rodape-cnh">
+      <div class="rodape-item" onclick="alert('Histórico de emissões ainda não disponível.')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1351B4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Histórico de emissões da CNH</span>
+      </div>
+      <div class="rodape-item exportar" onclick="exportarCNH()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1351B4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Exportar</span>
+      </div>
+    </div>
+
+    <input type="file" id="input-imagem" accept="image/*" style="display:none" onchange="salvarImagemSlide(event)">
+  </div>
+
+  <!-- ═══ OUTRAS ═══ -->
+  <div id="tela-outras" class="tela">
+    <div class="topo-gov">
+      <span class="seta" onclick="voltarCondutorOuMenu()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="titulo-topo" id="outras-titulo">—</span>
+    </div>
+    <div class="outras-conteudo">
+      <h2>Em breve</h2>
+      <p>Esta funcionalidade estará disponível em breve.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwtrzhqslsucrtoutolx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yBQvanestqkPkGlVVbzsyQ_xdj7arsh";
+
+let slideAtual = 0;
+let origemOutras = "menu";
+
+function mostrarTela(id) {
+  document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
+  document.getElementById(id).classList.add("ativa");
+  const scroll = document.querySelector("#" + id + " .scroll");
+  if (scroll) scroll.scrollTop = 0;
+}
+
+/* ═══ CPF ═══ */
+function irParaSenha() {
+  const cpf = document.getElementById("cpf-input").value.trim();
+  if (!cpf) {
+    const erro = document.getElementById("cpf-erro");
+    erro.textContent = "Digite seu CPF.";
+    erro.classList.add("show");
+    return;
+  }
+  document.getElementById("cpf-erro").classList.remove("show");
+  document.getElementById("cpf-mostrar").textContent = cpf;
+  window._cpfDigitado = cpf;
+  const savedPass = localStorage.getItem("app_pass_" + cpf);
+  document.getElementById("senha-input").value = savedPass || "";
+  mostrarTela("tela-senha");
+  setTimeout(() => document.getElementById("senha-input").focus(), 100);
+}
+function voltarCPF() { mostrarTela("tela-cpf"); }
+
+/* ═══ LOGIN ═══ */
+async function fazerLogin() {
+  const cpf = window._cpfDigitado;
+  const senha = document.getElementById("senha-input").value.trim();
+  const erro = document.getElementById("senha-erro");
+  if (!senha) { erro.textContent = "Digite sua senha."; erro.classList.add("show"); return; }
+  erro.classList.remove("show");
+
+  try {
+    const resp = await fetch(
+      SUPABASE_URL + "/rest/v1/codigos?select=*&numero_documento=eq." + encodeURIComponent(cpf) + "&app_tipo=eq.CNH&ativo=eq.true",
+      { headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY } }
+    );
+    const dados = await resp.json();
+    if (!resp.ok) throw new Error(dados.message || "Erro no servidor.");
+    if (!Array.isArray(dados) || dados.length === 0) {
+      erro.textContent = "CPF não encontrado ou código bloqueado.";
+      erro.classList.add("show");
+      return;
+    }
+    const registro = dados[0];
+    if (senha !== registro.codigo) {
+      erro.textContent = "Senha incorreta.";
+      erro.classList.add("show");
+      return;
+    }
+    localStorage.setItem("app_pass_" + cpf, senha);
+    localStorage.setItem("app_cpf", cpf);
+    window._nomeUsuario = registro.nome_usuario || "Usuário";
+    window._cpfUsuario = cpf;
+    window._registro = registro;
+
+    fetch(SUPABASE_URL + "/rest/v1/codigos?id=eq." + registro.id, {
+      method: "PATCH",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ultimo_acesso: new Date().toISOString() })
+    });
+
+    mostrarTela("tela-menu");
+  } catch (e) {
+    erro.textContent = "Erro: " + e.message;
+    erro.classList.add("show");
+  }
+}
+
+function sairApp() {
+  localStorage.removeItem("app_cpf");
+  document.getElementById("cpf-input").value = "";
+  document.getElementById("senha-input").value = "";
+  mostrarTela("tela-cpf");
+}
+
+/* ═══ MENU ═══ */
+function abrirCondutor() {
+  document.getElementById("cond-nome").textContent = window._nomeUsuario || "—";
+  document.getElementById("cond-cpf").textContent = window._cpfUsuario || "—";
+  mostrarTela("tela-condutor");
+}
+function voltarMenu() { mostrarTela("tela-menu"); }
+function voltarCondutor() { mostrarTela("tela-condutor"); }
+
+function abrirOutras(titulo) {
+  origemOutras = "condutor";
+  document.getElementById("outras-titulo").textContent = titulo.toUpperCase();
+  mostrarTela("tela-outras");
+}
+function voltarCondutorOuMenu() {
+  if (origemOutras === "condutor") mostrarTela("tela-condutor");
+  else mostrarTela("tela-menu");
+}
+
+/* ═══ CHAVE DE ACESSO ═══ */
+function abrirChaveAcesso() {
+  document.getElementById("chave-input").value = "";
+  document.getElementById("chave-erro").classList.remove("show");
+  mostrarTela("tela-chave");
+}
+function toggleChave() {
+  const input = document.getElementById("chave-input");
+  const icone = document.getElementById("icone-olho");
+  if (input.type === "password") {
+    input.type = "text";
+    icone.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  } else {
+    input.type = "password";
+    icone.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21" stroke="#1a1a1a" stroke-width="2"/>';
+  }
+}
+function validarChave() {
+  const chave = document.getElementById("chave-input").value.trim();
+  const erro = document.getElementById("chave-erro");
+  if (!chave) { erro.textContent = "Digite a chave de acesso."; erro.classList.add("show"); return; }
+  if (chave !== window._registro.codigo) {
+    erro.textContent = "Chave de acesso incorreta.";
+    erro.classList.add("show");
+    return;
+  }
+  erro.classList.remove("show");
+  abrirCNH();
+}
+function voltarChave() { mostrarTela("tela-chave"); }
+
+/* ═══ VISUALIZAR CNH ═══ */
+function abrirCNH() {
+  const agora = new Date();
+  const data = agora.toLocaleDateString("pt-BR") + " - " + agora.toLocaleTimeString("pt-BR");
+  document.getElementById("data-atualizacao").textContent = data;
+  renderizarCarrossel();
+  mostrarTela("tela-cnh");
+}
+
+function getImagens() {
+  const cpf = window._cpfUsuario;
+  try {
+    return JSON.parse(localStorage.getItem("cnh_imagens_" + cpf) || "[null,null,null,null]");
+  } catch(e) { return [null,null,null,null]; }
+}
+function setImagens(arr) {
+  const cpf = window._cpfUsuario;
+  localStorage.setItem("cnh_imagens_" + cpf, JSON.stringify(arr));
+}
+
+function renderizarCarrossel() {
+  const imagens = getImagens();
+  const carrossel = document.getElementById("carrossel");
+  carrossel.innerHTML = "";
+
+  imagens.forEach((img, i) => {
+    const slide = document.createElement("div");
+    slide.className = "slide";
+    slide.dataset.index = i;
+
+    const card = document.createElement("div");
+    card.className = "card-doc";
+
+    if (img) {
+      const el = document.createElement("img");
+      el.src = img;
+      el.alt = "Documento " + (i+1);
+      card.appendChild(el);
+    } else {
+      const ph = document.createElement("div");
+      ph.className = "placeholder-slide";
+      ph.onclick = () => abrirSeletorImagem(i);
+      ph.innerHTML = `
+        <svg viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 16.5a4 4 0 100-8 5.5 5.5 0 00-10.6-1.5A4.5 4.5 0 006.5 16.5H18z"/>
+          <path d="M12 12v7M12 12l-3 3M12 12l3 3"/>
+        </svg>
+        <span>Toque para anexar<br>${i === 0 ? "frente" : i === 1 ? "verso" : "imagem " + (i+1)}</span>
+      `;
+      card.appendChild(ph);
+    }
+    slide.appendChild(card);
+    carrossel.appendChild(slide);
+  });
+
+  atualizarIndicadores();
+  carrossel.scrollLeft = 0;
+  slideAtual = 0;
+}
+
+/* ═══ MENU 3 PONTINHOS DO TOPO ═══ */
+document.addEventListener("click", (e) => {
+  const btn = document.getElementById("btn-opcoes-topo");
+  const menu = document.getElementById("menu-flutuante-topo");
+  if (btn.contains(e.target)) {
+    menu.classList.toggle("ativo");
+    e.stopPropagation();
+  } else if (!menu.contains(e.target)) {
+    menu.classList.remove("ativo");
+  }
+});
+
+function trocarImagemAtual() {
+  document.getElementById("menu-flutuante-topo").classList.remove("ativo");
+  const imagens = getImagens();
+  if (!imagens[slideAtual]) {
+    abrirSeletorImagem(slideAtual);
+    return;
+  }
+  window._slideParaAnexar = slideAtual;
+  setTimeout(() => document.getElementById("input-imagem").click(), 80);
+}
+
+function removerImagemAtual() {
+  document.getElementById("menu-flutuante-topo").classList.remove("ativo");
+  const imagens = getImagens();
+  if (!imagens[slideAtual]) return;
+  imagens[slideAtual] = null;
+  setImagens(imagens);
+  const idx = slideAtual;
+  renderizarCarrossel();
+  setTimeout(() => irParaSlide(idx), 100);
+}
+
+/* ═══ ANEXAR IMAGEM ═══ */
+function abrirSeletorImagem(index) {
+  window._slideParaAnexar = index;
+  document.getElementById("input-imagem").click();
+}
+
+function salvarImagemSlide(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const imagens = getImagens();
+    imagens[window._slideParaAnexar] = e.target.result;
+    setImagens(imagens);
+    const index = window._slideParaAnexar;
+    renderizarCarrossel();
+    setTimeout(() => irParaSlide(index), 100);
+  };
+  reader.readAsDataURL(file);
+  event.target.value = "";
+}
+
+function irParaSlide(index) {
+  const carrossel = document.getElementById("carrossel");
+  const slide = carrossel.children[index];
+  if (slide) {
+    carrossel.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
+    slideAtual = index;
+    atualizarIndicadores();
+  }
+}
+
+function atualizarIndicadores() {
+  const bolinhas = document.querySelectorAll("#indicadores .bolinha");
+  bolinhas.forEach((b, i) => b.classList.toggle("ativa", i === slideAtual));
+}
+
+/* ═══ INIT ═══ */
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btn-continuar").addEventListener("click", irParaSenha);
+  document.getElementById("btn-entrar-login").addEventListener("click", fazerLogin);
+  document.getElementById("btn-validar-chave").addEventListener("click", validarChave);
+
+  const carrossel = document.getElementById("carrossel");
+  carrossel.addEventListener("scroll", () => {
+    const largura = carrossel.clientWidth;
+    const novo = Math.round(carrossel.scrollLeft / largura);
+    if (novo !== slideAtual) {
+      slideAtual = novo;
+      atualizarIndicadores();
+    }
+  });
+
+  const cpfSalvo = localStorage.getItem("app_cpf");
+  if (cpfSalvo) document.getElementById("cpf-input").value = cpfSalvo;
+
+  document.getElementById("cpf-input").addEventListener("keydown", e => { if (e.key === "Enter") irParaSenha(); });
+  document.getElementById("senha-input").addEventListener("keydown", e => { if (e.key === "Enter") fazerLogin(); });
+  document.getElementById("chave-input").addEventListener("keydown", e => { if (e.key === "Enter") validarChave(); });
+});
+
+function exportarCNH() {
+  alert("Função de exportação será implementada em breve.");
+}
+</script>
+</body>
+</html>
