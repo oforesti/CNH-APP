@@ -1,0 +1,25 @@
+{
+  "name": "Carteira Digital de Trânsito",
+  "short_name": "CDT",
+  "description": "Carteira Digital de Trânsito — consulte sua CNH e documentos.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B3A5C",
+  "theme_color": "#1B3A5C",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
